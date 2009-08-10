@@ -2,16 +2,16 @@ jQuery(function($) {
 	/*
 	* Update author "last online" timestamps
 	*/
-	function getWhosonline(){
+	function getwpwhosonline(){
 		toggleUpdates();
-		var queryString = whosonline.ajaxUrl +'?action=whosonline_ajax_update&load_time=' + whosonline.whosonlineLoadTime + '&frontpage=' + whosonline.isFirstFrontPage;
+		var queryString = wpwhosonline.ajaxUrl +'?action=wpwhosonline_ajax_update&load_time=' + wpwhosonline.wpwhosonlineLoadTime + '&frontpage=' + wpwhosonline.isFirstFrontPage;
 		ajaxCheckAuthors = $.getJSON(queryString, function(response){
 			if(typeof response.latestupdate != 'undefined') {
-				whosonline.whosonlineLoadTime = response.latestupdate;
+				wpwhosonline.wpwhosonlineLoadTime = response.latestupdate;
 				for(var i = 0; i < response.authors.length; i++) {
-					$('#whosonline-'+response.authors[i].user_id).
-						text( response.authors[i].whosonline ).
-						data('whosonline_timestamp', response.authors[i].whosonline_unix);
+					$('#wpwhosonline-'+response.authors[i].user_id).
+						text( response.authors[i].wpwhosonline ).
+						data('wpwhosonline_timestamp', response.authors[i].wpwhosonline_unix);
 				}
 			}
 		});
@@ -26,11 +26,11 @@ jQuery(function($) {
 		var old = 600; // 10 minutes
 		var ancient = 7200; // 2 hours
 
-		$('.widget_whosonline span').each(function(){
+		$('.widget_wpwhosonline span').each(function(){
 			var $o = $(this);
 			var since, oclass;
 
-			var last = $o.data('whosonline_timestamp');
+			var last = $o.data('wpwhosonline_timestamp');
 			if( typeof last == 'undefined' ) {
 				last = Date.parse($o.text()) / 1000;
 			}
@@ -50,12 +50,12 @@ jQuery(function($) {
 	}
 
 	function toggleUpdates() {
-		if (0 == whosonline.getWhosonlineUpdate) {
-			whosonline.getWhosonlineUpdate = setInterval(getWhosonline, 30000);
+		if (0 == wpwhosonline.getwpwhosonlineUpdate) {
+			wpwhosonline.getwpwhosonlineUpdate = setInterval(getwpwhosonline, 30000);
 		}
 		else {
-			clearInterval(whosonline.getWhosonlineUpdate);
-			whosonline.getWhosonlineUpdate = '0';
+			clearInterval(wpwhosonline.getwpwhosonlineUpdate);
+			wpwhosonline.getwpwhosonlineUpdate = '0';
 		}
 	}
 

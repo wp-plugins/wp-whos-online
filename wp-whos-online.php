@@ -9,48 +9,48 @@ Author: Adam Backstrom
 Author URI: http://blogs.bwerp.net/
 */
 
-function whosonline_init() {
-	add_action( 'wp_head', 'whosonline_pageoptions_js' );
-	add_action( 'wp_head', 'whosonline_css' );
+function wpwhosonline_init() {
+	add_action( 'wp_head', 'wpwhosonline_pageoptions_js' );
+	add_action( 'wp_head', 'wpwhosonline_css' );
 
-	wp_enqueue_script('whosonline', '/' . PLUGINDIR . '/whos-online/whos-online.js', array('jquery'));
+	wp_enqueue_script('wpwhosonline', '/' . PLUGINDIR . '/wp-whos-online/wp-whos-online.js', array('jquery'));
 
-	whosonline_update();
+	wpwhosonline_update();
 }
-add_action('template_redirect', 'whosonline_init');
+add_action('template_redirect', 'wpwhosonline_init');
 
 // our own ajax call
-add_action( 'wp_ajax_whosonline_ajax_update', 'whosonline_ajax_update' );
+add_action( 'wp_ajax_wpwhosonline_ajax_update', 'wpwhosonline_ajax_update' );
 
 // hook into p2 ajax calls, if they're there
-add_action( 'wp_ajax_prologue_latest_posts', 'whosonline_update' );
-add_action( 'wp_ajax_prologue_latest_comments', 'whosonline_update' );
+add_action( 'wp_ajax_prologue_latest_posts', 'wpwhosonline_update' );
+add_action( 'wp_ajax_prologue_latest_comments', 'wpwhosonline_update' );
 
 /**
  * Update a user's "last online" timestamp.
  */
-function whosonline_update() {
+function wpwhosonline_update() {
 	if( !is_user_logged_in() )
 		return null;
 
 	global $user_ID;
 
-	update_usermeta( $user_ID, 'whosonline_timestamp', time() );
-}//end whosonline_update
+	update_usermeta( $user_ID, 'wpwhosonline_timestamp', time() );
+}//end wpwhosonline_update
 
 /**
  * Echo json listing all authors who have had their "last online" timestamp updated
  * since the client's last update.
  */
-function whosonline_ajax_update() {
+function wpwhosonline_ajax_update() {
 	global $wpdb;
 
 	// update timestamp of user who is checking
-	whosonline_update();
+	wpwhosonline_update();
 
 	$load_time = strtotime($_GET['load_time'] . ' GMT');
-	$authors = $wpdb->get_results($wpdb->prepare("SELECT user_id, meta_value AS whosonline FROM $wpdb->usermeta
-		WHERE meta_key = 'whosonline_timestamp' AND meta_value > %d", $load_time));
+	$authors = $wpdb->get_results($wpdb->prepare("SELECT user_id, meta_value AS wpwhosonline FROM $wpdb->usermeta
+		WHERE meta_key = 'wpwhosonline_timestamp' AND meta_value > %d", $load_time));
 
 	if( count($authors) == 0 ) {
 		die( '0' );
@@ -58,39 +58,39 @@ function whosonline_ajax_update() {
 
 	$latest = 0;
 	foreach($authors as $author) {
-		if( $author->whosonline > $latest )
-			$latest = $author->whosonline;
+		if( $author->wpwhosonline > $latest )
+			$latest = $author->wpwhosonline;
 
-		$author->whosonline_unix = (int)$author->whosonline;
-		$author->whosonline = strftime( '%d %b %Y %H:%M:%S %Z', $author->whosonline );
+		$author->wpwhosonline_unix = (int)$author->wpwhosonline;
+		$author->wpwhosonline = strftime( '%d %b %Y %H:%M:%S %Z', $author->wpwhosonline );
 	}
 
 	echo json_encode( array('authors' => $authors, 'latestupdate' => gmdate('Y-m-d H:i:s', $latest)) );
 	exit;
 }
 
-function whosonline_css() {
+function wpwhosonline_css() {
 	?><style type="text/css">
-	.widget_whosonline .active { font-weight: bold; color: green; }
-	.widget_whosonline .recent { }
-	.widget_whosonline .ancient { font-style: italic; color: red; }
-	.widget_whosonline ul li { float: none; width: auto; height: 33px; }
-	.widget_whosonline h2 {}
-	.widget_whosonline ul li strong {}
-	.widget_whosonline ul li img.avatar { float: left; margin-right: 1ex; }
+	.widget_wpwhosonline .active { font-weight: bold; color: green; }
+	.widget_wpwhosonline .recent { }
+	.widget_wpwhosonline .ancient { font-style: italic; color: red; }
+	.widget_wpwhosonline ul li { float: none; width: auto; height: 33px; }
+	.widget_wpwhosonline h2 {}
+	.widget_wpwhosonline ul li strong {}
+	.widget_wpwhosonline ul li img.avatar { float: left; margin-right: 1ex; }
 	/* kubrick style follows */
-	#sidebar ul li.widget_whosonline ul li:before { content: none; }
+	#sidebar ul li.widget_wpwhosonline ul li:before { content: none; }
 	</style><?php
 }
 
-function whosonline_pageoptions_js() {
+function wpwhosonline_pageoptions_js() {
 	global $page_options;
 ?><script type='text/javascript'>
 // <![CDATA[
-var whosonline = {
+var wpwhosonline = {
 	'ajaxUrl': "<?php echo js_escape( get_bloginfo( 'wpurl' ) . '/wp-admin/admin-ajax.php' ); ?>",
-	'whosonlineLoadTime': "<?php echo gmdate( 'Y-m-d H:i:s' ); ?>",
-	'getWhosonlineUpdate': '0',
+	'wpwhosonlineLoadTime': "<?php echo gmdate( 'Y-m-d H:i:s' ); ?>",
+	'getwpwhosonlineUpdate': '0',
 	'isFirstFrontPage': "<?php echo is_home(); ?>"
 };
 // ]]>
@@ -98,7 +98,7 @@ var whosonline = {
 }
 
 /**
- * Custom version of wp_list_authors() for the whos-online plugin.
+ * Custom version of wp_list_authors() for the wp-whos-online plugin.
  *
  * optioncount (boolean) (false): Show the count in parenthesis next to the
  *		author's name.
@@ -114,14 +114,14 @@ var whosonline = {
  * @param array $args The argument array.
  * @return null|string The output, if echo is set to false.
  */
-function whosonline_list_authors($args = '') {
+function wpwhosonline_list_authors($args = '') {
 	global $wpdb;
 
 	$defaults = array(
 		'optioncount' => false, 'exclude_admin' => true,
 		'show_fullname' => false, 'hide_empty' => true,
 		'feed' => '', 'feed_image' => '', 'feed_type' => '', 'echo' => true,
-		'avatar_size' => 0, 'whosonline' => 0
+		'avatar_size' => 0, 'wpwhosonline' => 0
 	);
 
 	$r = wp_parse_args( $args, $defaults );
@@ -188,14 +188,14 @@ function whosonline_list_authors($args = '') {
 				$link .= ' ('. $posts . ')';
 		}
 
-		if ( $whosonline ) {
-			$whosonline_time = get_usermeta( $author->ID, 'whosonline_timestamp' );
-			if( $whosonline_time ) {
-				$whosonline_time = strftime( '%d %b %Y %H:%M:%S %Z', $whosonline_time );
+		if ( $wpwhosonline ) {
+			$wpwhosonline_time = get_usermeta( $author->ID, 'wpwhosonline_timestamp' );
+			if( $wpwhosonline_time ) {
+				$wpwhosonline_time = strftime( '%d %b %Y %H:%M:%S %Z', $wpwhosonline_time );
 			} else {
-				$whosonline_time = '';
+				$wpwhosonline_time = '';
 			}
-			$link .= '<br /><span id="whosonline-' . $author->ID . '" title="Last online timestamp">' . $whosonline_time . '</span>';
+			$link .= '<br /><span id="wpwhosonline-' . $author->ID . '" title="Last online timestamp">' . $wpwhosonline_time . '</span>';
 		}
 
 		if ( !($posts == 0 && $hide_empty) )
@@ -206,7 +206,7 @@ function whosonline_list_authors($args = '') {
 	echo $return;
 }
 
-function widget_whosonline_init() {
+function widget_wpwhosonline_init() {
 
   // Check for the required plugin functions. This will prevent fatal
   // errors occurring when you deactivate the dynamic-sidebar plugin.
@@ -214,13 +214,13 @@ function widget_whosonline_init() {
     return;
 
   // This is the function that outputs the Authors code.
-  function widget_whosonline($args) {
+  function widget_wpwhosonline($args) {
     extract($args);
 
     echo $before_widget . $before_title . "Users" . $after_title;
 ?>
 <ul>
-<?php whosonline_list_authors('optioncount=1&exclude_admin=0&show_fullname=1&hide_empty=0&avatar_size=32&whosonline=1'); ?>
+<?php wpwhosonline_list_authors('optioncount=1&exclude_admin=0&show_fullname=1&hide_empty=0&avatar_size=32&wpwhosonline=1'); ?>
 </ul>
 <?php
     echo $after_widget;
@@ -228,8 +228,8 @@ function widget_whosonline_init() {
 
   // This registers our widget so it appears with the other available
   // widgets and can be dragged and dropped into any active sidebars.
-  register_sidebar_widget('Who\'s Online', 'widget_whosonline');
+  register_sidebar_widget('Who\'s Online', 'widget_wpwhosonline');
 }
 
 // Run our code later in case this loads prior to any required plugins.
-add_action('plugins_loaded', 'widget_whosonline_init');
+add_action('plugins_loaded', 'widget_wpwhosonline_init');

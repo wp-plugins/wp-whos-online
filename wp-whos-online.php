@@ -56,13 +56,19 @@ function wpwhosonline_ajax_update() {
 		die( '0' );
 	}
 
+	$now = time();
+
 	$latest = 0;
 	foreach($authors as $author) {
 		if( $author->wpwhosonline > $latest )
 			$latest = $author->wpwhosonline;
 
 		$author->wpwhosonline_unix = (int)$author->wpwhosonline;
-		$author->wpwhosonline = strftime( '%d %b %Y %H:%M:%S %Z', $author->wpwhosonline );
+		if( $now - $author->wpwhosonline_unix < 120 ) {
+			$author->wpwhosonline = 'Online now!';
+		} else {
+			$author->wpwhosonline = strftime( '%d %b %Y %H:%M:%S %Z', $author->wpwhosonline );
+		}
 	}
 
 	echo json_encode( array('authors' => $authors, 'latestupdate' => gmdate('Y-m-d H:i:s', $latest)) );
@@ -189,9 +195,15 @@ function wpwhosonline_list_authors($args = '') {
 		}
 
 		if ( $wpwhosonline ) {
+			$now = time();
+
 			$wpwhosonline_time = get_usermeta( $author->ID, 'wpwhosonline_timestamp' );
 			if( $wpwhosonline_time ) {
-				$wpwhosonline_time = strftime( '%d %b %Y %H:%M:%S %Z', $wpwhosonline_time );
+				if( $now - $wpwhosonline_time < 120 ) {
+					$wpwhosonline_time = 'Online now!';
+				} else {
+					$wpwhosonline_time = strftime( '%d %b %Y %H:%M:%S %Z', $wpwhosonline_time );
+				}
 			} else {
 				$wpwhosonline_time = '';
 			}

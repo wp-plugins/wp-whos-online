@@ -29,7 +29,7 @@ function wpwhosonline_init() {
 	add_action( 'wp_head', 'wpwhosonline_pageoptions_js' );
 	add_action( 'wp_head', 'wpwhosonline_css' );
 
-	wp_enqueue_script('wpwhosonline', '/' . PLUGINDIR . '/wp-whos-online/wp-whos-online.js', array('jquery'));
+	wp_enqueue_script( 'wpwhosonline', plugins_url('wp-whos-online.js', __FILE__), array('jquery'), 1 );
 
 	wpwhosonline_update();
 }

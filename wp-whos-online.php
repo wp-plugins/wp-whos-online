@@ -25,15 +25,15 @@ License: GPL2
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-function wpwhosonline_init() {
-	add_action( 'wp_head', 'wpwhosonline_pageoptions_js' );
-	add_action( 'wp_head', 'wpwhosonline_css' );
+add_action('template_redirect', 'wpwhosonline_update');
+
+function wpwhosonline_enqueue() {
+	add_action( 'wp_head', 'wpwhosonline_pageoptions_js', 20 );
 
 	wp_enqueue_script( 'wpwhosonline', plugins_url('wp-whos-online.js', __FILE__), array('jquery'), 1 );
-
-	wpwhosonline_update();
+	wp_enqueue_style(  'wpwhosonline_css', plugins_url('wp-whos-online.css', __FILE__), null, 1 );
 }
-add_action('template_redirect', 'wpwhosonline_init');
+add_action('wp_enqueue_scripts', 'wpwhosonline_enqueue');
 
 // our own ajax call
 add_action( 'wp_ajax_wpwhosonline_ajax_update', 'wpwhosonline_ajax_update' );
@@ -51,7 +51,7 @@ function wpwhosonline_update() {
 
 	global $user_ID;
 
-	update_usermeta( $user_ID, 'wpwhosonline_timestamp', time() );
+	update_user_meta( $user_ID, 'wpwhosonline_timestamp', time() );
 }//end wpwhosonline_update
 
 /**
@@ -91,26 +91,12 @@ function wpwhosonline_ajax_update() {
 	exit;
 }
 
-function wpwhosonline_css() {
-	?><style type="text/css">
-	.widget_wpwhosonline .active { font-weight: bold; color: green; }
-	.widget_wpwhosonline .recent { }
-	.widget_wpwhosonline .ancient { font-style: italic; color: red; }
-	.widget_wpwhosonline ul li { float: none; width: auto; height: 33px; }
-	.widget_wpwhosonline h2 {}
-	.widget_wpwhosonline ul li strong {}
-	.widget_wpwhosonline ul li img.avatar { float: left; margin-right: 1ex; }
-	/* kubrick style follows */
-	#sidebar ul li.widget_wpwhosonline ul li:before { content: none; }
-	</style><?php
-}
-
 function wpwhosonline_pageoptions_js() {
 	global $page_options;
 ?><script type='text/javascript'>
 // <![CDATA[
 var wpwhosonline = {
-	'ajaxUrl': "<?php echo js_escape( get_bloginfo( 'wpurl' ) . '/wp-admin/admin-ajax.php' ); ?>",
+	'ajaxUrl': "<?php echo esc_js( get_bloginfo( 'wpurl' ) . '/wp-admin/admin-ajax.php' ); ?>",
 	'wpwhosonlineLoadTime': "<?php echo gmdate( 'Y-m-d H:i:s' ); ?>",
 	'getwpwhosonlineUpdate': '0',
 	'isFirstFrontPage': "<?php echo is_home(); ?>"
@@ -178,7 +164,7 @@ function wpwhosonline_list_authors($args = '') {
 			if ( !$hide_empty )
 				$link = $name;
 		} else {
-			$link = '<a href="' . get_author_posts_url($author->ID, $author->user_nicename) . '" title="' . sprintf(__("Posts by %s"), attribute_escape($author->display_name)) . '">' . $name . '</a>';
+			$link = '<a href="' . get_author_posts_url($author->ID, $author->user_nicename) . '" title="' . sprintf(__("Posts by %s"), esc_attr($author->display_name)) . '">' . $name . '</a>';
 
 			if ( (! empty($feed_image)) || (! empty($feed)) ) {
 				$link .= ' ';
@@ -213,7 +199,7 @@ function wpwhosonline_list_authors($args = '') {
 		if ( $wpwhosonline ) {
 			$now = time();
 
-			$wpwhosonline_time = get_usermeta( $author->ID, 'wpwhosonline_timestamp' );
+			$wpwhosonline_time = get_user_meta( $author->ID, 'wpwhosonline_timestamp', true );
 			if( $wpwhosonline_time ) {
 				if( $now - $wpwhosonline_time < 120 ) {
 					$wpwhosonline_time = 'Online now!';
@@ -238,7 +224,7 @@ function widget_wpwhosonline_init() {
 
   // Check for the required plugin functions. This will prevent fatal
   // errors occurring when you deactivate the dynamic-sidebar plugin.
-  if ( !function_exists('register_sidebar_widget') )
+  if ( !function_exists('wp_register_sidebar_widget') )
     return;
 
   // This is the function that outputs the Authors code.
@@ -256,7 +242,7 @@ function widget_wpwhosonline_init() {
 
   // This registers our widget so it appears with the other available
   // widgets and can be dragged and dropped into any active sidebars.
-  register_sidebar_widget('Who\'s Online', 'widget_wpwhosonline');
+  wp_register_sidebar_widget( 'widget_wpwhosonline', "Who's Online", 'widget_wpwhosonline' );
 }
 
 // Run our code later in case this loads prior to any required plugins.
